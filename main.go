@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"head/main_com"
+	config_main "head/main_com/config"
 	"head/main_com/func_app"
 	"net/http"
-	"os/exec"
 	"strconv"
 )
 
@@ -21,23 +22,19 @@ import (
 // ⠄⠄⠄⠄⠄⠈⠙⠑⣠⣤⣴⡖⠄⠿⣋⣉⣉⡁⠄⢾⣦⠄⠄⠄⠄⠄⠄⠄⠄
 
 func main() {
-	var port int
-	port = func_app.FindFreePort()
-
-	portStr := ":" + strconv.Itoa(port)
-
-	var cmd *exec.Cmd
-	cmd = func_app.StartShellWeb(port)
+	cmd := func_app.StartShellWeb(config_main.Port)
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
 
-	// get
-	// http.HandleFunc("/main", main_com.Render_index_page)
+	// Get
+	http.HandleFunc("/main", main_com.Render_main_page)
 
 	// Post
-	// http.HandleFunc("/get_wifi_now", page.Post_gagat_network)
+	http.HandleFunc("/test", main_com.Post_test)
 
-	fmt.Printf("started %d\n", port)
+	portStr := ":" + strconv.Itoa(config_main.Port)
+
+	fmt.Printf("started %d\n", config_main.Port)
 	http.ListenAndServe(portStr, nil)
 
 	if cmd != nil {
