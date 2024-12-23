@@ -2,33 +2,47 @@ package main
 
 import (
 	"fmt"
-	"strings"
+	"head/main_com/func_app"
+	"net/http"
+	"os/exec"
+	"strconv"
 )
 
-func convertToUkrainian(text string) string {
-	englishToUkrainian := map[rune]rune{
-		'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з',
-		'[': 'х', ']': 'ї', '\\': 'є', 'a': 'ф', 's': 'і', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о',
-		'k': 'л', 'l': 'д', ';': 'ж', '\'': 'є', 'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т',
-		'm': 'ь', ',': 'б', '.': 'ю', '/': 'ї', 'A': 'Ф', 'S': 'І', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р',
-		'J': 'О', 'K': 'Л', 'L': 'Д', ':': 'Ж', '"': 'Є', 'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И',
-		'N': 'Т', 'M': 'Ь', '<': 'Б', '>': 'Ю', '?': 'Ї',
-	}
-
-	var result strings.Builder
-	for _, char := range text {
-		if ukChar, found := englishToUkrainian[char]; found {
-			result.WriteRune(ukChar)
-		} else {
-			result.WriteRune(char) // якщо символ не знайдено, залишити як є
-		}
-	}
-
-	return result.String()
-}
+// ⠄⠄⠄⠄⢠⣿⣿⣿⣿⣿⢻⣿⣿⣿⣿⣿⣿⣿⣿⣯⢻⣿⣿⣿⣿⣆⠄⠄⠄
+// ⠄⠄⣼⢀⣿⣿⣿⣿⣏⡏⠄⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢻⣿⣿⣿⣿⡆⠄⠄
+// ⠄⠄⡟⣼⣿⣿⣿⣿⣿⠄⠄⠄⠈⠻⣿⣿⣿⣿⣿⣿⣿⣇⢻⣿⣿⣿⣿⠄⠄
+// ⠄⢰⠃⣿⣿⠿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠙⠿⣿⣿⣿⣿⣿⠄⢿⣿⣿⣿⡄⠄
+// ⠄⢸⢠⣿⣿⣧⡙⣿⣿⡆⠄⠄⠄⠄⠄⠄⠄⠈⠛⢿⣿⣿⡇⠸⣿⡿⣸⡇⠄
+// ⠄⠈⡆⣿⣿⣿⣿⣦⡙⠳⠄⠄⠄⠄⠄⠄⢀⣠⣤⣀⣈⠙⠃⠄⠿⢇⣿⡇⠄
+// ⠄⠄⡇⢿⣿⣿⣿⣿⡇⠄⠄⠄⠄⠄⣠⣶⣿⣿⣿⣿⣿⣿⣷⣆⡀⣼⣿⡇⠄
+// ⠄⠄⢹⡘⣿⣿⣿⢿⣷⡀⠄⢀⣴⣾⣟⠉⠉⠉⠉⣽⣿⣿⣿⣿⠇⢹⣿⠃⠄
+// ⠄⠄⠄⢷⡘⢿⣿⣎⢻⣷⠰⣿⣿⣿⣿⣦⣀⣀⣴⣿⣿⣿⠟⢫⡾⢸⡟⠄.
+// ⠄⠄⠄⠄⠻⣦⡙⠿⣧⠙⢷⠙⠻⠿⢿⡿⠿⠿⠛⠋⠉⠄⠂⠘⠁⠞⠄⠄⠄
+// ⠄⠄⠄⠄⠄⠈⠙⠑⣠⣤⣴⡖⠄⠿⣋⣉⣉⡁⠄⢾⣦⠄⠄⠄⠄⠄⠄⠄⠄
 
 func main() {
-	inputText := "z pyf. dct"
-	outputText := convertToUkrainian(inputText)
-	fmt.Println(outputText) // виведе: я знаю все
+	var port int
+	port = func_app.FindFreePort()
+
+	portStr := ":" + strconv.Itoa(port)
+
+	var cmd *exec.Cmd
+	cmd = func_app.StartShellWeb(port)
+
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
+
+	// get
+	// http.HandleFunc("/main", main_com.Render_index_page)
+
+	// Post
+	// http.HandleFunc("/get_wifi_now", page.Post_gagat_network)
+
+	fmt.Printf("started %d\n", port)
+	http.ListenAndServe(portStr, nil)
+
+	if cmd != nil {
+		if err := cmd.Process.Kill(); err != nil {
+			fmt.Printf("not shell_web.exe: %v\n", err)
+		}
+	}
 }

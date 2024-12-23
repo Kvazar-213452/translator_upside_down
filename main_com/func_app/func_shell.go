@@ -2,33 +2,75 @@ package func_app
 
 import (
 	"fmt"
-	"strings"
+	config_main "head/main_com/config"
+	"net"
+	"os"
+	"os/exec"
+	"os/signal"
+	"strconv"
+	"syscall"
 )
 
-func convertToUkrainian(text string) string {
-	englishToUkrainian := map[rune]rune{
-		'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з',
-		'[': 'х', ']': 'ї', '\\': 'є', 'a': 'ф', 's': 'і', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о',
-		'k': 'л', 'l': 'д', ';': 'ж', '\'': 'є', 'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т',
-		'm': 'ь', ',': 'б', '.': 'ю', '/': 'ї', 'A': 'Ф', 'S': 'І', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р',
-		'J': 'О', 'K': 'Л', 'L': 'Д', ':': 'Ж', '"': 'Є', 'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И',
-		'N': 'Т', 'M': 'Ь', '<': 'Б', '>': 'Ю', '?': 'Ї',
+func FindFreePort() int {
+	listener, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		return 0
 	}
+	defer listener.Close()
 
-	var result strings.Builder
-	for _, char := range text {
-		if ukChar, found := englishToUkrainian[char]; found {
-			result.WriteRune(ukChar)
-		} else {
-			result.WriteRune(char)
-		}
-	}
-
-	return result.String()
+	addr := listener.Addr().(*net.TCPAddr)
+	return addr.Port
 }
 
-func main() {
-	inputText := "z pyf. dct"
-	outputText := convertToUkrainian(inputText)
-	fmt.Println(outputText)
+func StartShellWeb(port int) *exec.Cmd {
+	originalDir, _ := os.Getwd()
+	os.Chdir("shell")
+
+	var cmd *exec.Cmd
+
+	os.Chdir("NM1")
+
+	htmlContent := fmt.Sprintf(`%s/main`, strconv.Itoa(port))
+
+	args := []string{
+		config_main.Name,
+		config_main.Window_h,
+		config_main.Window_w,
+		htmlContent,
+	}
+
+	cmd = exec.Command(config_main.Core_web, args...)
+
+	defer func() {
+		os.Chdir(originalDir)
+	}()
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	cmd.Start()
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	doneChan := make(chan error, 1)
+	go func() {
+		doneChan <- cmd.Wait()
+	}()
+
+	go func() {
+		select {
+		case sig := <-sigChan:
+			fmt.Printf("error", sig)
+			os.Exit(0)
+		case err := <-doneChan:
+			if err != nil {
+				fmt.Printf("error %v\n", err)
+			} else {
+				fmt.Println("error")
+			}
+			os.Exit(0)
+		}
+	}()
+
+	return cmd
 }
