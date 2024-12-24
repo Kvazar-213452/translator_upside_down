@@ -1,5 +1,3 @@
 * text=auto
 
-shell/NM1_sorse/webview.h linguist-documentation
-frontend/static/jquery.min.js linguist-documentation
-frontend/static/css/*css linguist-documentation
+# shell/NM1_sorse/webview.h linguist-documentation

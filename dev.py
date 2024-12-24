@@ -19,8 +19,6 @@ if let == 0:
     os.system(f'git commit -m "{name}"')
     os.system("git push")
 elif let == 1:
-    os.system("sass frontend/static/prefab/main.scss frontend/static/css/main.css")
-elif let == 2:
     subprocess.run(["go", "build"])
     subprocess.run(["./head.exe"])
 

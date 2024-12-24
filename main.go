@@ -1,49 +1,41 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
-	"head/main_com"
-	config_main "head/main_com/config"
-	"head/main_com/func_app"
-	"net/http"
-	"os/exec"
-	"strconv"
+	"os"
+	"strings"
 )
 
-// ⠄⠄⠄⠄⢠⣿⣿⣿⣿⣿⢻⣿⣿⣿⣿⣿⣿⣿⣿⣯⢻⣿⣿⣿⣿⣆⠄⠄⠄
-// ⠄⠄⣼⢀⣿⣿⣿⣿⣏⡏⠄⠹⣿⣿⣿⣿⣿⣿⣿⣿⣧⢻⣿⣿⣿⣿⡆⠄⠄
-// ⠄⠄⡟⣼⣿⣿⣿⣿⣿⠄⠄⠄⠈⠻⣿⣿⣿⣿⣿⣿⣿⣇⢻⣿⣿⣿⣿⠄⠄
-// ⠄⢰⠃⣿⣿⠿⣿⣿⣿⠄⠄⠄⠄⠄⠄⠙⠿⣿⣿⣿⣿⣿⠄⢿⣿⣿⣿⡄⠄
-// ⠄⢸⢠⣿⣿⣧⡙⣿⣿⡆⠄⠄⠄⠄⠄⠄⠄⠈⠛⢿⣿⣿⡇⠸⣿⡿⣸⡇⠄
-// ⠄⠈⡆⣿⣿⣿⣿⣦⡙⠳⠄⠄⠄⠄⠄⠄⢀⣠⣤⣀⣈⠙⠃⠄⠿⢇⣿⡇⠄
-// ⠄⠄⡇⢿⣿⣿⣿⣿⡇⠄⠄⠄⠄⠄⣠⣶⣿⣿⣿⣿⣿⣿⣷⣆⡀⣼⣿⡇⠄
-// ⠄⠄⢹⡘⣿⣿⣿⢿⣷⡀⠄⢀⣴⣾⣟⠉⠉⠉⠉⣽⣿⣿⣿⣿⠇⢹⣿⠃⠄
-// ⠄⠄⠄⢷⡘⢿⣿⣎⢻⣷⠰⣿⣿⣿⣿⣦⣀⣀⣴⣿⣿⣿⠟⢫⡾⢸⡟⠄.
-// ⠄⠄⠄⠄⠻⣦⡙⠿⣧⠙⢷⠙⠻⠿⢿⡿⠿⠿⠛⠋⠉⠄⠂⠘⠁⠞⠄⠄⠄
-// ⠄⠄⠄⠄⠄⠈⠙⠑⣠⣤⣴⡖⠄⠿⣋⣉⣉⡁⠄⢾⣦⠄⠄⠄⠄⠄⠄⠄⠄
-
-func main() {
-	var cmd *exec.Cmd
-	if config_main.Dev == 0 {
-		cmd = func_app.StartShellWeb(config_main.Port)
+func convertToUkrainian(text string) string {
+	englishToUkrainian := map[rune]rune{
+		'q': 'й', 'w': 'ц', 'e': 'у', 'r': 'к', 't': 'е', 'y': 'н', 'u': 'г', 'i': 'ш', 'o': 'щ', 'p': 'з',
+		'[': 'х', ']': 'ї', '\\': 'є', 'a': 'ф', 's': 'і', 'd': 'в', 'f': 'а', 'g': 'п', 'h': 'р', 'j': 'о',
+		'k': 'л', 'l': 'д', ';': 'ж', '\'': 'є', 'z': 'я', 'x': 'ч', 'c': 'с', 'v': 'м', 'b': 'и', 'n': 'т',
+		'm': 'ь', ',': 'б', '.': 'ю', '/': 'ї', 'A': 'Ф', 'S': 'І', 'D': 'В', 'F': 'А', 'G': 'П', 'H': 'Р',
+		'J': 'О', 'K': 'Л', 'L': 'Д', ':': 'Ж', '"': 'Є', 'Z': 'Я', 'X': 'Ч', 'C': 'С', 'V': 'М', 'B': 'И',
+		'N': 'Т', 'M': 'Ь', '<': 'Б', '>': 'Ю', '?': 'Ї',
 	}
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
-
-	// Get
-	http.HandleFunc("/main", main_com.Render_main_page)
-
-	// Post
-	http.HandleFunc("/test", main_com.Post_test)
-
-	portStr := ":" + strconv.Itoa(config_main.Port)
-
-	fmt.Printf("started %d\n", config_main.Port)
-	http.ListenAndServe(portStr, nil)
-
-	if cmd != nil {
-		if err := cmd.Process.Kill(); err != nil {
-			fmt.Printf("not shell_web.exe: %v\n", err)
+	var result strings.Builder
+	for _, char := range text {
+		if ukChar, found := englishToUkrainian[char]; found {
+			result.WriteRune(ukChar)
+		} else {
+			result.WriteRune(char)
 		}
 	}
+
+	return result.String()
+}
+
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Println("Input:")
+	inputText, _ := reader.ReadString('\n')
+	inputText = strings.TrimSpace(inputText)
+
+	outputText := convertToUkrainian(inputText)
+	fmt.Println("Результат українською мовою:")
+	fmt.Println(outputText)
 }
