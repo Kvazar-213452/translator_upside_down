@@ -6,6 +6,7 @@ import (
 	config_main "head/main_com/config"
 	"head/main_com/func_app"
 	"net/http"
+	"os/exec"
 	"strconv"
 )
 
@@ -22,7 +23,10 @@ import (
 // ⠄⠄⠄⠄⠄⠈⠙⠑⣠⣤⣴⡖⠄⠿⣋⣉⣉⡁⠄⢾⣦⠄⠄⠄⠄⠄⠄⠄⠄
 
 func main() {
-	cmd := func_app.StartShellWeb(config_main.Port)
+	var cmd *exec.Cmd
+	if config_main.Dev == 0 {
+		cmd = func_app.StartShellWeb(config_main.Port)
+	}
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("frontend/static"))))
 
